@@ -13,6 +13,7 @@ import scala.util.matching.Regex
 object Spark_Exer2 {
 
   val UNKNOWN_LABEL = "unknown"
+  val fileName = "file:///home/stefan/nasa-http-logs"
 
 
   def useRegex(pattern: Regex) = udf(
@@ -35,10 +36,7 @@ object Spark_Exer2 {
     val conf = new SparkConf().setAppName("test").setMaster("spark://stefan-Inspiron-7548:7077")
     val sparkSession = SparkSession.builder().appName("test").master("spark://stefan-Inspiron-7548:7077").getOrCreate()
 
-
-
-    val fileName = "file:///home/stefan/nasa-http-logs"
-
+    
     val nasaHTTPlogsDF = sparkSession.read.text(fileName)
     val splitDF = nasaHTTPlogsDF.withColumn("host", useRegex(new Regex("^([^\\s]+\\s)"))(nasaHTTPlogsDF("value")))
       .withColumn("timestamp", useRegex(new Regex("^.*\\[(\\d\\d/\\w{3}/\\d{4}:\\d{2}:\\d{2}:\\d{2} -\\d{4})]"))(nasaHTTPlogsDF("value")))
