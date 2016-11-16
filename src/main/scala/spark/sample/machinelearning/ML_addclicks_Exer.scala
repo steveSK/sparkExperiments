@@ -317,7 +317,7 @@ object ML_addclicks_Exer {
     trainingPredictions.show(1000)
 
     val logLossTrainModelBasic = evaluateResults(oheTrainDF, lrModelBasic,sparkSession)
-    println("logLossAvg: " + logLossTrainModelBasic) 
+    println("logLossAvg: " + logLossTrainModelBasic)
 
 
   }
