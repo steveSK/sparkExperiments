@@ -1,35 +1,29 @@
 package spark.sample.machinelearning
 
 import org.apache.spark.SparkConf
-import org.apache.spark.mllib.classification.{LogisticRegressionModel, LogisticRegressionWithLBFGS}
-import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
-import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import org.apache.spark.sql.functions._
-import org.apache.spark.ml.linalg.{Vector, Vectors}
-import org.apache.spark.mllib.optimization.{L1Updater, SimpleUpdater, SquaredL2Updater}
-import org.apache.spark.rdd.RDD
+import org.apache.spark.mllib.optimization.L1Updater
+import org.apache.spark.sql.SparkSession
+import spark.sample.utils.{SparkConfig, SparkUtils}
 
 /**
   * Created by stefan on 11/4/16.
   */
-object ML_SVM_Exer {
+object ML_SVM_Example {
 
   val filepathTrain = "/home/stefan/adult-data-train.txt"
   val filepathTest = "/home/stefan/adult-data-test.txt"
+  val appName = "SVM-example"
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName("test").setMaster("spark://stefan-Inspiron-7548:7077")
-    val sparkSession = SparkSession.builder().appName("test").master("spark://stefan-Inspiron-7548:7077").getOrCreate()
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    val sparkSession = SparkSession.builder().config(conf).getOrCreate()
     sparkSession.sqlContext.setConf("spark.sql.shuffle.partitions", "6")
-    import sparkSession.implicits._
 
-    val trainRawDF = Utils.loadDataFromCSV(filepathTrain, sparkSession)
-    val testRawDF = Utils.loadDataFromCSV(filepathTest, sparkSession)
+    val trainRawDF = SparkUtils.loadDataFromCSV(filepathTrain, sparkSession)
+    val testRawDF = SparkUtils.loadDataFromCSV(filepathTest, sparkSession)
 
     val continousColumns = List("education", "workclass", "marital-status",
       "occupation", "relationship", "race", "sex", "native-country")
@@ -41,8 +35,8 @@ object ML_SVM_Exer {
       case ">50K" => 1.0
     }
 
-    val trainRDD = Utils.transformRawDFToLabeledPointRDD(trainRawDF, continousColumns, toLabel, sparkSession)
-    val testRDD = Utils.transformRawDFToLabeledPointRDD(testRawDF, continousColumns, toLabel, sparkSession)
+    val trainRDD = SparkUtils.transformRawDFToLabeledPointRDD(trainRawDF, continousColumns, toLabel, sparkSession)
+    val testRDD = SparkUtils.transformRawDFToLabeledPointRDD(testRawDF, continousColumns, toLabel, sparkSession)
 
     val numIterations = 1000
     val regParam = 0.01

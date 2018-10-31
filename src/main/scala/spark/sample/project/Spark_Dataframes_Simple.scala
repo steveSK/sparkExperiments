@@ -1,20 +1,21 @@
 package spark.sample.project
 
 import faker.{Company, Name}
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.types._
 import org.apache.spark.{SparkConf, SparkContext}
+import spark.sample.utils.SparkConfig
 
 import scala.util.Random
 
 /**
   * Created by stefan on 10/3/16.
   */
-object Spark_Less1 {
+object Spark_Dataframes_Simple {
 
-  val  CURRENT_YEAR = 2016
+  val  currentYear = 2016
+  val  appName = "dataframes-simple"
 
   case class Person(fullName: String, job: String, yearBorn: Integer)
   def fakeEntry() : Person = {
@@ -33,7 +34,7 @@ object Spark_Less1 {
   def main(args: Array[String]) {
     val data  = repeat(100)
     print(data)
-    val conf = new SparkConf().setAppName("test").setMaster("spark://stefan-Inspiron-7548:7077")
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
@@ -44,10 +45,7 @@ object Spark_Less1 {
 
     val dataRows = data.map(v => Row(v.fullName, v.job, v.yearBorn))
 
-
-
     val rdd = sc.parallelize(dataRows)
-   // val rddRow = rdd.map(v => Row(v: _*))
 
     println("rdd created, lines: " + rdd.count())
 
@@ -57,22 +55,25 @@ object Spark_Less1 {
 
     dataDF.rdd.getNumPartitions
 
-   // val newDF = dataDF.distinct().select("*")
-   // newDF.explain(true)
+    val uniqueDF = dataDF.distinct().select("*")
+    uniqueDF.explain(true)
 
-    val calculateAge: Integer => Integer = CURRENT_YEAR - _
+    val calculateAge: Integer => Integer = currentYear - _
     val myUdf = udf(calculateAge)
 
     val subDF = dataDF.withColumn("age", myUdf(dataDF.col("yearBorn"))).select("fullName", "job","age")
-    //val subDF = dataDF.select("fullName", "job","yearBorn")
     subDF.explain(true)
+
     val filteredDF = subDF.filter(subDF("age") < 18)
+    filteredDF.show()
     filteredDF.cache()
-    //val results = filteredDF.collect()
-    //filteredDF.show()
+    val results = filteredDF.collect()
+
     subDF.orderBy(subDF("age").desc).show()
-   // subDF.groupBy().avg("age").show(false)
-    filteredDF.count()
+    subDF.groupBy().avg("age").show(false)
+
+    println(filteredDF.count())
+
     val sampledDF = dataDF.sample(false, 0.20)
     sampledDF.show()
 

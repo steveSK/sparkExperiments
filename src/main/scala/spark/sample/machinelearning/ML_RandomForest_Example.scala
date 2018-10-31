@@ -4,24 +4,26 @@ import org.apache.spark.SparkConf
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.mllib.tree.RandomForest
 import org.apache.spark.sql.SparkSession
+import spark.sample.utils.{SparkConfig, SparkUtils}
 
 /**
   * Created by stefan on 11/9/16.
   */
-object ML_RandomForest_Exer {
+object ML_RandomForest_Example {
 
   val filepathTrain = "/home/stefan/adult-data-train.txt"
   val filepathTest = "/home/stefan/adult-data-test.txt"
+  val appName = "Random Forest"
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName("test").setMaster("spark://stefan-Inspiron-7548:7077")
-    val sparkSession = SparkSession.builder().appName("test").master("spark://stefan-Inspiron-7548:7077").getOrCreate()
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    val sparkSession = SparkSession.builder().config(conf).getOrCreate()
     sparkSession.sqlContext.setConf("spark.sql.shuffle.partitions", "6")
     import sparkSession.implicits._
 
-    val trainRawDF = Utils.loadDataFromCSV(filepathTrain, sparkSession)
-    val testRawDF = Utils.loadDataFromCSV(filepathTest, sparkSession)
+    val trainRawDF = SparkUtils.loadDataFromCSV(filepathTrain, sparkSession)
+    val testRawDF = SparkUtils.loadDataFromCSV(filepathTest, sparkSession)
 
     val numClasses = 2
     val categoricalFeaturesInfo = Map[Int, Int]()
@@ -41,8 +43,8 @@ object ML_RandomForest_Exer {
       case ">50K" => 1.0
     }
 
-    val trainRDD = Utils.transformRawDFToLabeledPointRDD(trainRawDF, continousColumns, toLabel, sparkSession)
-    val testRDD = Utils.transformRawDFToLabeledPointRDD(testRawDF, continousColumns, toLabel, sparkSession)
+    val trainRDD = SparkUtils.transformRawDFToLabeledPointRDD(trainRawDF, continousColumns, toLabel, sparkSession)
+    val testRDD = SparkUtils.transformRawDFToLabeledPointRDD(testRawDF, continousColumns, toLabel, sparkSession)
 
     val model = RandomForest.trainClassifier(trainRDD, numClasses, categoricalFeaturesInfo,
       numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)

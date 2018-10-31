@@ -1,7 +1,6 @@
 package spark.sample.machinelearning
 
 import org.apache.spark.SparkConf
-import breeze.linalg.*
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.feature.{LabeledPoint, PolynomialExpansion}
@@ -11,13 +10,15 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.types._
+import spark.sample.utils.SparkConfig
 
 /**
   * Created by stefan on 10/12/16.
   */
-object ML_songs_Exer {
+object ML_Songs_Example {
 
   val songFilePath = "/home/stefan/millionsong.txt"
+  val appName = "songs-example"
 
 
   val convertToLabeledPoints: String => LabeledPoint = x => {
@@ -158,8 +159,8 @@ object ML_songs_Exer {
 
 
   def main(args: Array[String]) {
-    val conf = new SparkConf().setAppName("test").setMaster("spark://stefan-Inspiron-7548:7077")
-    val sparkSession = SparkSession.builder().appName("test").master("spark://stefan-Inspiron-7548:7077").getOrCreate()
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    val sparkSession = SparkSession.builder().config(conf).getOrCreate()
     import sparkSession.implicits._
 
 

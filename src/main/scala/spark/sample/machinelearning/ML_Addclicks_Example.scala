@@ -5,34 +5,27 @@ import java.math.BigInteger
 
 import org.apache.spark.SparkConf
 import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.ml.Model
 import org.apache.spark.ml.classification.{LogisticRegression, LogisticRegressionModel}
-import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vectors}
-import org.apache.spark.mllib.linalg.VectorUDT
-import org.apache.spark.sql._
 import org.apache.spark.ml.linalg.SQLDataTypes.VectorType
-import org.apache.spark.rdd.RDD
+import org.apache.spark.ml.linalg.{SparseVector, Vectors}
+import org.apache.spark.sql._
+import org.apache.spark.sql.functions.{lit, udf, when}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.functions.udf
-import org.apache.spark.sql.functions.when
-import org.apache.spark.sql.functions.lit
+import spark.sample.utils.SparkConfig
 
-import scala.None
-import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
-import scala.reflect.ClassTag
-import java.security.MessageDigest
 
 
 /**
   * Created by stefan on 10/14/16.
   */
-object ML_addclicks_Exer {
+object ML_Addclicks_Example {
 
 
   val dataFilePath = "file:///home/stefan/dac_sample.txt"
   val epsilon = 1e-16
+  val appName = "addClicksExample"
 
 
   def dotProduct(a: org.apache.spark.ml.linalg.Vector, b:org.apache.spark.ml.linalg.Vector) = {
@@ -157,7 +150,7 @@ object ML_addclicks_Exer {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName("test").setMaster("spark://stefan-Inspiron-7548:7077")
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
     val sparkSession = SparkSession.builder().appName("test").master("spark://stefan-Inspiron-7548:7077").getOrCreate()
     sparkSession.sqlContext.setConf("spark.sql.shuffle.partitions", "6")
     import sparkSession.implicits._

@@ -1,19 +1,20 @@
 package spark.sample.project
 
-import org.apache.spark.sql.{Row, SQLContext, SparkSession}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.functions.udf
-import org.apache.spark.sql.functions._
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.functions.{udf, _}
+import org.apache.spark.sql.{Row, SparkSession}
+import spark.sample.utils.SparkConfig
 
 import scala.util.matching.Regex
 
 /**
   * Created by stefan on 10/5/16.
   */
-object Spark_Exer2 {
+object Spark_Experiment_NASA_HTTP {
 
-  val UNKNOWN_LABEL = "unknown"
+  val unknownLabel = "unknown"
   val fileName = "file:///home/stefan/nasa-http-logs"
+  val appName = "nasa-logs-experiment"
 
 
   def useRegex(pattern: Regex) = udf(
@@ -24,7 +25,7 @@ object Spark_Exer2 {
       else None
     } match {
       case Some(s) => s
-      case None => UNKNOWN_LABEL
+      case None => unknownLabel
     }
 
   )
@@ -33,10 +34,10 @@ object Spark_Exer2 {
   def main(args: Array[String]) {
 
 
-    val conf = new SparkConf().setAppName("test").setMaster("spark://stefan-Inspiron-7548:7077")
-    val sparkSession = SparkSession.builder().appName("test").master("spark://stefan-Inspiron-7548:7077").getOrCreate()
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    val sparkSession = SparkSession.builder().config(conf).getOrCreate()
 
-    
+
     val nasaHTTPlogsDF = sparkSession.read.text(fileName)
     val splitDF = nasaHTTPlogsDF.withColumn("host", useRegex(new Regex("^([^\\s]+\\s)"))(nasaHTTPlogsDF("value")))
       .withColumn("timestamp", useRegex(new Regex("^.*\\[(\\d\\d/\\w{3}/\\d{4}:\\d{2}:\\d{2}:\\d{2} -\\d{4})]"))(nasaHTTPlogsDF("value")))
@@ -52,27 +53,20 @@ object Spark_Exer2 {
     import sparkSession.implicits._
     val clearedDF = sparkSession.createDataFrame(splitDF.rdd.map(row => {
       val colValue = row(4)
-      if (colValue.equals(UNKNOWN_LABEL)) Row(row(0), row(1), row(2), row(3), "0") else row
+      if (colValue.equals(unknownLabel)) Row(row(0), row(1), row(2), row(3), "0") else row
     }), splitDF.schema)
 
 
 
-   /*   val badRowsDf =  splitDF.filter( splitDF("host").like("unknown") ||
-      splitDF("timestamp").equals("unknown") ||
-      splitDF("path").equals("unknown") ||
-      splitDF("status").equals("unknown") ||
-      splitDF("content_size").equals("unknown"))
-
-
-     val badRowsDf =  clearedDF.filter( clearedDF("host").like("unknown") ||  clearedDF("timestamp").like(UNKNOWN_LABEL) ||
-        clearedDF("path").like(UNKNOWN_LABEL) ||
-        clearedDF("status").like(UNKNOWN_LABEL) ||
-        clearedDF("content_size").like(UNKNOWN_LABEL))
+     val badRowsDf =  clearedDF.filter( clearedDF("host").like("unknown") ||  clearedDF("timestamp").like(unknownLabel) ||
+        clearedDF("path").like(unknownLabel) ||
+        clearedDF("status").like(unknownLabel) ||
+        clearedDF("content_size").like(unknownLabel))
 
       badRowsDf.printSchema()
       badRowsDf.explain()
       badRowsDf.show()
-      println("null count: " + badRowsDf.show()) */
+      println("null count: " + badRowsDf.show())
 
     val parsedLogsDF = clearedDF.withColumn("timestamp", unix_timestamp(clearedDF("timestamp"), "dd/MMM/yyyy:HH:mm:ss -SSS").cast("timestamp"))
     parsedLogsDF.cache()
@@ -104,8 +98,10 @@ object Spark_Exer2 {
     val dayToHostPairDF = parsedLogsDF.withColumn("day", dayofmonth(parsedLogsDF("timestamp"))).select("host", "day")
     dayToHostPairDF.show()
     dayToHostPairDF.cache()
+
     val dayGroupHostsDF = dayToHostPairDF.groupBy("host").agg(collect_list("day") as "days")
     dayGroupHostsDF.show()
+
     val dailyHostsDF = dayToHostPairDF.distinct().groupBy("day").count().orderBy("day")
     dailyHostsDF.show(30,false)
     dailyHostsDF.cache()

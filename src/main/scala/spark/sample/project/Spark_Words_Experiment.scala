@@ -4,11 +4,16 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.functions.udf
+import spark.sample.utils.SparkConfig
 
 /**
   * Created by stefan on 10/3/16.
   */
-object Spark_Exer1 {
+object Spark_Words_Experiment {
+
+  val appName = "words-experiment"
+  val fileName = "file:///home/stefan/shakespear.txt"
+
   case class Word(word: String)
 
   def wordCount(wordListDF : DataFrame): DataFrame = {
@@ -26,7 +31,7 @@ object Spark_Exer1 {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName("test").setMaster("spark://stefan-Inspiron-7548:7077")
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
@@ -51,14 +56,14 @@ object Spark_Exer1 {
     pluralLengthsDF.show()
 
 
-    //  val wordCountsDF = wordsDF.groupBy("word").count()
-    //  wordCountsDF.show()
+    val wordCountsDF = wordsDF.groupBy("word").count()
+    wordCountsDF.show()
 
     val uniqueWordsDF = wordsDF.distinct()
     println("unique words: " + uniqueWordsDF.count())
 
-    //  val wordCountsDFMean = wordCountsDF.groupBy().mean("count")
-    //  wordCountsDFMean.show()
+    val wordCountsDFMean = wordCountsDF.groupBy().mean("count")
+    wordCountsDFMean.show()
 
     wordCount(wordsDF).show()
     val func3 = removePunctuation(_)
@@ -71,9 +76,6 @@ object Spark_Exer1 {
     val sentenceDF = sqlContext.createDataFrame(rddSentences, schemeSentences)
     sentenceDF.show(false)
     sentenceDF.withColumn("sentence", udf3(sentenceDF.col("sentence"))).show(false)
-
-
-    val fileName = "file:///home/stefan/shakespear.txt"
 
     val shakespeareDFTemp = sqlContext.read.text(fileName)
     val shakespeareDF = shakespeareDFTemp.withColumn("value", udf3(shakespeareDFTemp.col("value")))

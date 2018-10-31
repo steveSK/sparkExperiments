@@ -1,15 +1,15 @@
-package spark.sample.machinelearning
+package spark.sample.utils
 
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 /**
   * Created by stefan on 11/9/16.
   */
-object Utils {
+object SparkUtils {
 
   def  parseRawDF(rawDF: Dataset[Row], labelIndex: Int, sparkSession: SparkSession): Dataset[Row] = {
     import sparkSession.implicits._
