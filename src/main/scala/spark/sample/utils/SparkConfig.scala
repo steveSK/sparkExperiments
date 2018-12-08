@@ -2,7 +2,8 @@ package spark.sample.utils
 
 object SparkConfig {
 
-  val sparkMaster = "spark://stefan-Inspiron-7548:7077"
+  val sparkRemoteMaster = "spark://saruman:7077"
+  val sparkMasterLocal = "local[4]"
 
 
 }

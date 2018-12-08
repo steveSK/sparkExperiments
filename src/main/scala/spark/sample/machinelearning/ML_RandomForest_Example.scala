@@ -17,7 +17,7 @@ object ML_RandomForest_Example {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkRemoteMaster)
     val sparkSession = SparkSession.builder().config(conf).getOrCreate()
     sparkSession.sqlContext.setConf("spark.sql.shuffle.partitions", "6")
     import sparkSession.implicits._

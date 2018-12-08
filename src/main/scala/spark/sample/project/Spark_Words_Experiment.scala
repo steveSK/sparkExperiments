@@ -31,7 +31,7 @@ object Spark_Words_Experiment {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkRemoteMaster)
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 

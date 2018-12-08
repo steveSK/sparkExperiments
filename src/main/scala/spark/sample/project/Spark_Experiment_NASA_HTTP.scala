@@ -34,7 +34,7 @@ object Spark_Experiment_NASA_HTTP {
   def main(args: Array[String]) {
 
 
-    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkRemoteMaster)
     val sparkSession = SparkSession.builder().config(conf).getOrCreate()
 
 
@@ -45,7 +45,7 @@ object Spark_Experiment_NASA_HTTP {
       .withColumn("status", useRegex(new Regex("^.*\"\\s+([^\\s]+)"))(nasaHTTPlogsDF("value")))
       .withColumn("content_size", useRegex(new Regex("^.*\\s+(\\d+)$"))(nasaHTTPlogsDF("value")))
       .drop(nasaHTTPlogsDF("value"))
-    //  splitDF.persist()
+
 
 
     splitDF.printSchema()

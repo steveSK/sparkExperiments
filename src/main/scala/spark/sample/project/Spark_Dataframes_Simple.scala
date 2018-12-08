@@ -14,7 +14,7 @@ import scala.util.Random
   */
 object Spark_Dataframes_Simple {
 
-  val  currentYear = 2016
+  val  currentYear = 2018
   val  appName = "dataframes-simple"
 
   case class Person(fullName: String, job: String, yearBorn: Integer)
@@ -33,8 +33,8 @@ object Spark_Dataframes_Simple {
 
   def main(args: Array[String]) {
     val data  = repeat(100)
-    print(data)
-    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    //print(data)
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMasterLocal)
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
@@ -51,18 +51,20 @@ object Spark_Dataframes_Simple {
 
     val dataDF = sqlContext.createDataFrame(rdd,schema)
     println("dataFrame created: " + dataDF.printSchema())
-    dataDF.registerTempTable("dataframe")
+    dataDF.createOrReplaceTempView("dataframe")
 
     dataDF.rdd.getNumPartitions
 
     val uniqueDF = dataDF.distinct().select("*")
-    uniqueDF.explain(true)
+    uniqueDF.show()
+    //uniqueDF.explain(true)
 
     val calculateAge: Integer => Integer = currentYear - _
     val myUdf = udf(calculateAge)
 
-    val subDF = dataDF.withColumn("age", myUdf(dataDF.col("yearBorn"))).select("fullName", "job","age")
-    subDF.explain(true)
+    val subDF = uniqueDF.withColumn("age", myUdf(uniqueDF.col("yearBorn"))).select("fullName", "job","age")
+    //subDF.explain(true)
+    subDF.show();
 
     val filteredDF = subDF.filter(subDF("age") < 18)
     filteredDF.show()

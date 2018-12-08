@@ -159,7 +159,7 @@ object ML_Songs_Example {
 
 
   def main(args: Array[String]) {
-    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMaster)
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkRemoteMaster)
     val sparkSession = SparkSession.builder().config(conf).getOrCreate()
     import sparkSession.implicits._
 
