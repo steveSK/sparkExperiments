@@ -1,11 +1,12 @@
 package spark.sample.project
 
 import faker.{Company, Name}
-import org.apache.spark.sql.{Row, SQLContext}
+import org.apache.spark.sql.{Row, SQLContext, SparkSession}
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.types._
 import org.apache.spark.{SparkConf, SparkContext}
 import spark.sample.utils.SparkConfig
+import scala.collection.JavaConversions._
 
 import scala.util.Random
 
@@ -35,8 +36,7 @@ object Spark_Dataframes_Simple {
     val data  = repeat(100)
     //print(data)
     val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMasterLocal)
-    val sc = new SparkContext(conf)
-    val sqlContext = new SQLContext(sc)
+    val sparkSession = SparkSession.builder().config(conf).getOrCreate()
 
     val schema = StructType(Seq(StructField("fullName", StringType, false),
       StructField("job", StringType, false),
@@ -45,11 +45,7 @@ object Spark_Dataframes_Simple {
 
     val dataRows = data.map(v => Row(v.fullName, v.job, v.yearBorn))
 
-    val rdd = sc.parallelize(dataRows)
-
-    println("rdd created, lines: " + rdd.count())
-
-    val dataDF = sqlContext.createDataFrame(rdd,schema)
+    val dataDF = sparkSession.createDataFrame(dataRows,schema);
     println("dataFrame created: " + dataDF.printSchema())
     dataDF.createOrReplaceTempView("dataframe")
 

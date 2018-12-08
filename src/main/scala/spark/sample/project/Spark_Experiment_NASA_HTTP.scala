@@ -13,7 +13,7 @@ import scala.util.matching.Regex
 object Spark_Experiment_NASA_HTTP {
 
   val unknownLabel = "unknown"
-  val fileName = "file:///home/stefan/nasa-http-logs"
+  val fileName = "file:///home/stefan/TestData/nasa-http-logs"
   val appName = "nasa-logs-experiment"
 
 
@@ -34,7 +34,7 @@ object Spark_Experiment_NASA_HTTP {
   def main(args: Array[String]) {
 
 
-    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkRemoteMaster)
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMasterLocal)
     val sparkSession = SparkSession.builder().config(conf).getOrCreate()
 
 
@@ -51,6 +51,7 @@ object Spark_Experiment_NASA_HTTP {
     splitDF.printSchema()
     splitDF.show(false)
     import sparkSession.implicits._
+
     val clearedDF = sparkSession.createDataFrame(splitDF.rdd.map(row => {
       val colValue = row(4)
       if (colValue.equals(unknownLabel)) Row(row(0), row(1), row(2), row(3), "0") else row
