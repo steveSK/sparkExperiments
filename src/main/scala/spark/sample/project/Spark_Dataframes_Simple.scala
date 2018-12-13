@@ -2,11 +2,9 @@ package spark.sample.project
 
 import faker.{Company, Name}
 import org.apache.spark.sql.{Row, SQLContext, SparkSession}
-import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.types._
 import org.apache.spark.{SparkConf, SparkContext}
 import spark.sample.utils.SparkConfig
-import scala.collection.JavaConversions._
 
 import scala.util.Random
 
@@ -19,6 +17,7 @@ object Spark_Dataframes_Simple {
   val  appName = "dataframes-simple"
 
   case class Person(fullName: String, job: String, yearBorn: Integer)
+
   def fakeEntry() : Person = {
     val r = new Random()
     return new Person(Name.name, Company.name.filterNot(x => x==','),  1950 + r.nextInt(50))
@@ -38,11 +37,18 @@ object Spark_Dataframes_Simple {
     val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMasterLocal)
     val sparkSession = SparkSession.builder().config(conf).getOrCreate()
 
+    import sparkSession.implicits._
+
     val schema = StructType(Seq(StructField("fullName", StringType, false),
       StructField("job", StringType, false),
       StructField("yearBorn", IntegerType, false)
     ))
 
+
+    val dataDS = sparkSession.createDataset(data)
+
+
+    /*
     val dataRows = data.map(v => Row(v.fullName, v.job, v.yearBorn))
 
     val dataDF = sparkSession.createDataFrame(dataRows,schema);
@@ -75,7 +81,7 @@ object Spark_Dataframes_Simple {
     val sampledDF = dataDF.sample(false, 0.20)
     sampledDF.show()
 
-    filteredDF.unpersist()
+    filteredDF.unpersist() */
 
   }
 

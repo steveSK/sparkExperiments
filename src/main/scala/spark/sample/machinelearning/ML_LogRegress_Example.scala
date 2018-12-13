@@ -19,8 +19,8 @@ object ML_LogRegress_Example {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkRemoteMaster)
-    val sparkSession = SparkSession.builder().appName("test").master("spark://stefan-Inspiron-7548:7077").getOrCreate()
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMasterLocal)
+    val sparkSession = SparkSession.builder().appName("test").master(SparkConfig.sparkMasterLocal).getOrCreate()
     sparkSession.sqlContext.setConf("spark.sql.shuffle.partitions", "6")
     import sparkSession.implicits._
 

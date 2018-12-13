@@ -1,10 +1,12 @@
 package spark.sample.project
 
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.functions.udf
 import spark.sample.utils.SparkConfig
+
+import scala.collection.mutable
 
 /**
   * Created by stefan on 10/3/16.
@@ -15,6 +17,8 @@ object Spark_Words_Experiment {
   val fileName = "file:///home/stefan/shakespear.txt"
 
   case class Word(word: String)
+  case class WordCount(word: String, count: Int)
+
 
   def wordCount(wordListDF : DataFrame): DataFrame = {
     wordListDF.groupBy("word").count()
@@ -31,20 +35,53 @@ object Spark_Words_Experiment {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkRemoteMaster)
-    val sc = new SparkContext(conf)
-    val sqlContext = new SQLContext(sc)
 
-    val list = List("cat", "elephant", "rat", "rat", "cat")
-    val scheme = StructType(Seq(StructField("word", StringType, false)))
-    val dataRows = list.map(x => Row(x))
-    val rdd = sc.parallelize(dataRows)
-    val wordsDF = sqlContext.createDataFrame(rdd, scheme)
-    wordsDF.show()
-    wordsDF.printSchema()
+
+    val conf = new SparkConf().setAppName(appName).setMaster(SparkConfig.sparkMasterLocal)
+    val sparkSession = SparkSession.builder().config(conf).getOrCreate()
+
+    import sparkSession.implicits._
+
+
+    val linesDataset = sparkSession.sparkContext.parallelize(Seq("Spark I am your father", "May the spark be with you", "Spark I am your father")).toDS()
+    val wordsDataset = linesDataset.flatMap(x => x.split(" "))
+    val removeDuplicates = wordsDataset.filter(_!="")
+
+
+    val pairsDataset = removeDuplicates.map(w => (w,1))
+      .withColumnRenamed("_1","word")
+      .withColumnRenamed("_2","count")
+
+    val pairsDatasetGrouped = pairsDataset.groupBy("word")
+    val countDataset = pairsDatasetGrouped.count()
+    countDataset.show()
+
+
+    val pairsDataset0 = removeDuplicates.map(w => WordCount(w,1))
+
+    val pairsDatasetGrouped0 = pairsDataset0.groupByKey(x => x.word)
+
+    val countDataset0 = pairsDatasetGrouped0.reduceGroups((x,y) => WordCount(x.word,x.count + y.count)).toDF("key","count").select("count")
+    countDataset0.show()
+
+    val users = Seq((1, "user1"), (1, "user2"), (2, "user1"), (2, "user3"), (3,"user2"), (3,"user4"),(3,"user6"))
+
+    // Input RDD
+    val us = sparkSession.sparkContext.parallelize(users)
+
+
+    val empty = Seq
+
+    val res = us.mapValues(x => (x,"")).reduceByKey((x,y) => (x._1,y._1)).values
+    res.collect().foreach(println)
+
+
+
+
+
 
     //1. task add s to column
-    val addS: String => String = _.concat("s")
+    /*val addS: String => String = _.concat("s")
     val udf1 = udf(addS)
     val pluralDF = wordsDF.withColumn("word", udf1(wordsDF.col("word")))
     pluralDF.show()
@@ -93,7 +130,7 @@ object Spark_Words_Experiment {
 
     val shakeWordCountDFTemp = wordCount(filteredShakeWordsDF)
     val shakeWordCountDF = shakeWordCountDFTemp.orderBy(shakeWordCountDFTemp("count").desc)
-    shakeWordCountDF.show()
+    shakeWordCountDF.show() */
 
   }
 }
